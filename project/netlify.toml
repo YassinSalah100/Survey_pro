@@ -1,18 +1,23 @@
 # netlify.toml
 
 [build]
-  base = "project" # Your project folder
-  publish = "dist"
+  base = "project" 
+  publish = "dist" 
   command = "npm run build"
 
-# Mixed content issue fix
+# Handle Mixed Content (CORS Error)
 [[redirects]]
   from = "/api/*"
-  to = "http://survey-pro-api.runasp.net/api/:splat"
+  to = "https://survey-pro-api.runasp.net/api/:splat"
   status = 200
   force = true
 
+# Redirect all routes to index.html (SPA)
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
+
+# Environment settings for production
+[context.production.environment]
+  NODE_ENV = "production"
