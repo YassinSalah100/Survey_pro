@@ -1,24 +1,11 @@
 # netlify.toml
 
-# Build settings
 [build]
   base = "project" # Your project folder
-  publish = "dist" # Folder where your build output is located
-  command = "npm run build" # Vite build command
+  publish = "dist"
+  command = "npm run build"
 
-# Redirect all routes to index.html for SPA
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
-
-# Resolve Mixed Content issue through Redirect
-[[redirects]]
-  from = "/api/*"
-  to = "http://survey-pro-api.runasp.net/api/:splat"
-  status = 200
-  force = true
-
-# Environment settings for production
-[context.production.environment]
-  NODE_ENV = "production"
