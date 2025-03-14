@@ -22,3 +22,9 @@
 # Environment settings for production
 [context.production.environment]
   NODE_ENV = "production"
+
+# Add the new redirect
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
