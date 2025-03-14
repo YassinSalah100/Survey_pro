@@ -1,8 +1,24 @@
-[build]
-  command = "npm run build"
-  publish = "dist"
+# netlify.toml
 
+# Specify the project base directory
+[build]
+  base = "/" # If the project is in the root, if in a subfolder like /client, change accordingly
+  publish = "dist" # The folder containing the final build files
+  command = "npm run build" # Build command
+
+# Resolve Mixed Content issue through Redirect
+[[redirects]]
+  from = "/api/*"
+  to = "http://survey-pro-api.runasp.net/api/:splat"
+  status = 200
+  force = true
+
+# Redirect all routes to index.html for SPA
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
+
+# Environment settings for production
+[context.production.environment]
+  NODE_ENV = "production"
