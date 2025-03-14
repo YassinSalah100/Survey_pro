@@ -14,7 +14,7 @@ const Login = () => {
   const location = useLocation()
 
   const from = location.state?.from?.pathname || "/surveys"
-  const API_URL = "https://survey-pro-api.runasp.net/api"
+  const API_URL = "http://survey-pro-api.runasp.net/api"
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

@@ -59,7 +59,7 @@ export default function SurveyResponse() {
     const fetchSurvey = async () => {
       try {
         setLoading(true)
-        const response = await fetch(`https://survey-pro-api.runasp.net/api/surveys/${surveyId}`)
+        const response = await fetch(`http://survey-pro-api.runasp.net/api/surveys/${surveyId}`)
 
         if (!response.ok) {
           throw new Error(`API error: ${response.status}`)
@@ -163,7 +163,7 @@ export default function SurveyResponse() {
   
       console.log("Submitting data:", formattedResponses); // Keep this debug log
       
-      const response = await fetch(`https://survey-pro-api.runasp.net/api/surveys/${surveyId}/respond`, {
+      const response = await fetch(`http://survey-pro-api.runasp.net/api/surveys/${surveyId}/respond`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
