@@ -1,9 +1,14 @@
 # netlify.toml
-
 [build]
   base = "project" # Your project folder
   publish = "dist"
   command = "npm run build"
+
+[[redirects]]
+  from = "/api/*"
+  to = "http://survey-pro-api.runasp.net/api/:splat"
+  status = 200
+  force = true
 
 [[redirects]]
   from = "/*"
