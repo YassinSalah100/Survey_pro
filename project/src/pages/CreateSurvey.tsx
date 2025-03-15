@@ -25,7 +25,15 @@ import axios from "axios"
 // 2 = open_ended
 // 3 = checkbox
 // 4 = linear_scale
-type QuestionType = "multiple_choice" | "likert_scale" | "open_ended" | "checkbox" | "linear_scale" | "date" | "time"
+type QuestionType =
+  | "multiple_choice"
+  | "likert_scale"
+  | "open_ended"
+  | "checkbox"
+  | "linear_scale"
+  | "date"
+  | "time"
+  | "closed_ended"
 
 interface Question {
   id: string
@@ -76,6 +84,8 @@ const questionTypeToApiType = (type: QuestionType): number => {
       return 5 // Assuming these are additional types
     case "time":
       return 6 // Assuming these are additional types
+    case "closed_ended":
+      return 7 // New type for closed-ended questions
     default:
       return 1
   }
@@ -331,12 +341,12 @@ const CreateSurvey = () => {
 
   const renderQuestionFields = (question: Question, index: number) => {
     const commonFields = (
-      <div className="space-y-4">
-        <div className="flex items-start gap-4">
+      <div className="space-y-3 sm:space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-4">
           <input
             type="text"
             placeholder="Enter your question"
-            className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+            className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
             value={question.question}
             onChange={(e) => {
               const newQuestions = [...survey.questions]
@@ -344,14 +354,14 @@ const CreateSurvey = () => {
               setSurvey({ ...survey, questions: newQuestions })
             }}
           />
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 self-end sm:self-auto">
             <button
               type="button"
               onClick={() => duplicateQuestion(index)}
               className="p-2 text-gray-600 hover:text-indigo-600"
               title="Duplicate question"
             >
-              <Copy className="h-5 w-5" />
+              <Copy className="h-4 w-4 sm:h-5 sm:w-5" />
             </button>
             <button
               type="button"
@@ -359,14 +369,14 @@ const CreateSurvey = () => {
               className="p-2 text-gray-600 hover:text-red-600"
               title="Remove question"
             >
-              <Trash2 className="h-5 w-5" />
+              <Trash2 className="h-4 w-4 sm:h-5 sm:w-5" />
             </button>
           </div>
         </div>
         <input
           type="text"
           placeholder="Add a description (optional)"
-          className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+          className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
           value={question.description || ""}
           onChange={(e) => {
             const newQuestions = [...survey.questions]
@@ -450,7 +460,7 @@ const CreateSurvey = () => {
           <div className="space-y-4">
             {commonFields}
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Minimum Value</label>
                   <input
@@ -511,7 +521,7 @@ const CreateSurvey = () => {
         return (
           <div className="space-y-4">
             {commonFields}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700">Minimum Value</label>
                 <input
@@ -583,6 +593,17 @@ const CreateSurvey = () => {
             </div>
           </div>
         )
+      case "closed_ended":
+        return (
+          <div className="space-y-4">
+            {commonFields}
+            <div className="bg-gray-50 p-4 rounded-md">
+              <p className="text-sm text-gray-600">
+                Respondents will be provided with a short text field for a brief, specific answer.
+              </p>
+            </div>
+          </div>
+        )
 
       default:
         return null
@@ -590,26 +611,26 @@ const CreateSurvey = () => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 min-h-screen">
-      <div className="bg-white rounded-xl shadow-lg p-6">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Create New Survey</h1>
-          <div className="flex items-center gap-4">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 min-h-screen">
+      <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 sm:mb-8 gap-4">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Create New Survey</h1>
+          <div className="flex items-center gap-2 sm:gap-4">
             <button
               type="button"
               onClick={() => setShowSettings(!showSettings)}
-              className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+              className="inline-flex items-center px-3 sm:px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
             >
-              <Settings className="h-4 w-4 mr-2" />
-              Settings
+              <Settings className="h-4 w-4 mr-1 sm:mr-2" />
+              <span className="hidden xs:inline">Settings</span>
             </button>
             <button
               type="button"
               onClick={() => setPreviewMode(!previewMode)}
-              className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+              className="inline-flex items-center px-3 sm:px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
             >
-              <Eye className="h-4 w-4 mr-2" />
-              {previewMode ? "Edit" : "Preview"}
+              <Eye className="h-4 w-4 mr-1 sm:mr-2" />
+              <span className="hidden xs:inline">{previewMode ? "Edit" : "Preview"}</span>
             </button>
           </div>
         </div>
@@ -778,46 +799,54 @@ const CreateSurvey = () => {
           <div className="space-y-4">
             <div>
               <h2 className="text-xl font-semibold text-gray-900 mb-4">Questions</h2>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2 mb-2">
                 <button
                   type="button"
                   onClick={() => addQuestion("multiple_choice")}
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+                  className="inline-flex items-center px-2 sm:px-4 py-2 border border-transparent text-xs sm:text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
                 >
-                  <List className="h-4 w-4 mr-2" />
+                  <List className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                   Multiple Choice
                 </button>
                 <button
                   type="button"
                   onClick={() => addQuestion("checkbox")}
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+                  className="inline-flex items-center px-2 sm:px-4 py-2 border border-transparent text-xs sm:text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
                 >
-                  <List className="h-4 w-4 mr-2" />
+                  <List className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                   Checkbox
                 </button>
                 <button
                   type="button"
                   onClick={() => addQuestion("likert_scale")}
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+                  className="inline-flex items-center px-2 sm:px-4 py-2 border border-transparent text-xs sm:text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
                 >
-                  <CircleDot className="h-4 w-4 mr-2" />
+                  <CircleDot className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                   Likert Scale
                 </button>
                 <button
                   type="button"
                   onClick={() => addQuestion("linear_scale")}
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+                  className="inline-flex items-center px-2 sm:px-4 py-2 border border-transparent text-xs sm:text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
                 >
-                  <CircleDot className="h-4 w-4 mr-2" />
+                  <CircleDot className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                   Linear Scale
                 </button>
                 <button
                   type="button"
                   onClick={() => addQuestion("open_ended")}
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+                  className="inline-flex items-center px-2 sm:px-4 py-2 border border-transparent text-xs sm:text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
                 >
-                  <AlignLeft className="h-4 w-4 mr-2" />
+                  <AlignLeft className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                   Open-Ended
+                </button>
+                <button
+                  type="button"
+                  onClick={() => addQuestion("closed_ended")}
+                  className="inline-flex items-center px-2 sm:px-4 py-2 border border-transparent text-xs sm:text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+                >
+                  <AlignLeft className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                  Closed-Ended
                 </button>
               </div>
             </div>
@@ -841,22 +870,22 @@ const CreateSurvey = () => {
             ))}
           </div>
 
-          <div className="flex justify-end pt-6">
+          <div className="flex justify-end pt-4 sm:pt-6">
             <button
               type="submit"
               disabled={isSubmitting || !isAuthenticated}
-              className={`inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${
+              className={`inline-flex items-center px-4 sm:px-6 py-2 sm:py-3 border border-transparent text-sm sm:text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${
                 isSubmitting || !isAuthenticated ? "opacity-70 cursor-not-allowed" : ""
               }`}
             >
               {isSubmitting ? (
                 <>
-                  <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                  <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 mr-2 animate-spin" />
                   Creating...
                 </>
               ) : (
                 <>
-                  <Save className="h-5 w-5 mr-2" />
+                  <Save className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
                   Create Survey
                 </>
               )}

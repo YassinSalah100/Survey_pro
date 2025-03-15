@@ -34,7 +34,10 @@ enum QuestionType {
   MultipleChoice = 1,
   Text = 2,
   Checkbox = 3,
-  NPS = 4
+  NPS = 4,
+  Date = 5,
+  Time = 6,
+  ClosedEnded = 7,
 }
 
 interface Answer {
@@ -140,54 +143,54 @@ export default function SurveyResponse() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setSubmitError(null)
-  
+
     if (!validateAnswers()) return
-  
+
     try {
       setSubmitting(true)
-      
+
       // Map to the correct format expected by the API
       const formattedResponses = answers.map((answer) => {
         // Determine if this is a checkbox/multiple selection question
-        const isMultiSelect = Array.isArray(answer.value);
-        
+        const isMultiSelect = Array.isArray(answer.value)
+
         return {
           questionId: answer.questionId,
           // For checkbox questions, use the array as the value
           // For other questions, use the string value
           // But always provide both fields
           answer: isMultiSelect ? "" : answer.value, // Empty string instead of null
-          selectedOptions: isMultiSelect ? answer.value : [] // Empty array instead of null
-        };
-      });
-  
-      console.log("Submitting data:", formattedResponses); // Keep this debug log
-      
-      const response = await fetch(`/api/surveys/${surveyId}/respond`, {
+          selectedOptions: isMultiSelect ? answer.value : [], // Empty array instead of null
+        }
+      })
+
+      console.log("Submitting data:", formattedResponses) // Keep this debug log
+
+      const response = await fetch(`http://survey-pro-api.runasp.net/api/surveys/${surveyId}/respond`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(formattedResponses),
-      });
-  
+      })
+
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error("API response:", errorText);
-        throw new Error(`API error: ${response.status} - ${errorText}`);
+        const errorText = await response.text()
+        console.error("API response:", errorText)
+        throw new Error(`API error: ${response.status} - ${errorText}`)
       }
-  
-      setSuccess(true);
+
+      setSuccess(true)
       setTimeout(() => {
-        navigate("/surveys");
-      }, 3000);
+        navigate("/surveys")
+      }, 3000)
     } catch (err) {
-      console.error("Error submitting survey responses:", err);
-      setSubmitError("Failed to submit your responses. Please try again.");
+      console.error("Error submitting survey responses:", err)
+      setSubmitError("Failed to submit your responses. Please try again.")
     } finally {
-      setSubmitting(false);
+      setSubmitting(false)
     }
-  };
+  }
   // Render different input types based on question type
   const renderQuestionInput = (question: Question) => {
     const answer = answers.find((a) => a.questionId === question.id)
@@ -202,6 +205,19 @@ export default function SurveyResponse() {
             value={(answer?.value as string) || ""}
             onChange={(e) => handleTextChange(question.id, e.target.value)}
             required={question.isRequired}
+          />
+        )
+
+      case QuestionType.ClosedEnded:
+        return (
+          <input
+            type="text"
+            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            placeholder="Your brief answer"
+            value={(answer?.value as string) || ""}
+            onChange={(e) => handleTextChange(question.id, e.target.value)}
+            required={question.isRequired}
+            maxLength={100} // Limit the length for closed-ended responses
           />
         )
 
@@ -255,9 +271,7 @@ export default function SurveyResponse() {
                 type="button"
                 key={optionIndex}
                 className={`w-12 h-12 flex items-center justify-center rounded-full text-lg font-medium transition-colors ${
-                  answer?.value === option
-                    ? "bg-indigo-600 text-white"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  answer?.value === option ? "bg-indigo-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                 }`}
                 onClick={() => handleMultipleChoiceChange(question.id, option)}
               >
@@ -293,8 +307,30 @@ export default function SurveyResponse() {
           </div>
         )
 
+      case QuestionType.Date:
+        return (
+          <input
+            type="date"
+            className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            value={(answer?.value as string) || ""}
+            onChange={(e) => handleTextChange(question.id, e.target.value)}
+            required={question.isRequired}
+          />
+        )
+
+      case QuestionType.Time:
+        return (
+          <input
+            type="time"
+            className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            value={(answer?.value as string) || ""}
+            onChange={(e) => handleTextChange(question.id, e.target.value)}
+            required={question.isRequired}
+          />
+        )
+
       default:
-        return <p className="text-red-500">Unsupported question type</p>
+        return <p className="text-red-500">Unsupported question type: {question.type}</p>
     }
   }
 
@@ -373,9 +409,7 @@ export default function SurveyResponse() {
               </div>
             )}
 
-            <div className="mt-4">
-              {renderQuestionInput(question)}
-            </div>
+            <div className="mt-4">{renderQuestionInput(question)}</div>
           </div>
         ))}
 
@@ -410,3 +444,4 @@ export default function SurveyResponse() {
     </div>
   )
 }
+
