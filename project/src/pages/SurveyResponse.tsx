@@ -163,7 +163,7 @@ export default function SurveyResponse() {
   
       console.log("Submitting data:", formattedResponses); // Keep this debug log
       
-      const response = await fetch(`http://survey-pro-api.runasp.net/api/surveys/${surveyId}/respond`, {
+      const response = await fetch(`/api/surveys/${surveyId}/respond`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
