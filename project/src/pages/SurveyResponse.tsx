@@ -60,15 +60,33 @@ export default function SurveyResponse() {
 
   useEffect(() => {
     const fetchSurvey = async () => {
+      if (!surveyId) {
+        setError("Survey ID is missing")
+        setLoading(false)
+        return
+      }
+
       try {
         setLoading(true)
+        // Make sure we're using the correct API endpoint
         const response = await fetch(`/api/surveys/${surveyId}`)
 
         if (!response.ok) {
-          throw new Error(`API error: ${response.status}`)
+          if (response.status === 404) {
+            throw new Error("Survey not found")
+          } else {
+            throw new Error(`API error: ${response.status}`)
+          }
+        }
+
+        // Check if the response is JSON
+        const contentType = response.headers.get("content-type")
+        if (!contentType || !contentType.includes("application/json")) {
+          throw new Error("Invalid response format. Expected JSON.")
         }
 
         const data = await response.json()
+        console.log("Survey data:", data) // Debug log
         setSurvey(data)
 
         // Initialize answers array with empty values based on question type
@@ -79,15 +97,13 @@ export default function SurveyResponse() {
         setAnswers(initialAnswers)
       } catch (err) {
         console.error("Error fetching survey:", err)
-        setError("Failed to load survey. Please try again later.")
+        setError(`Failed to load survey: ${err instanceof Error ? err.message : "Unknown error"}`)
       } finally {
         setLoading(false)
       }
     }
 
-    if (surveyId) {
-      fetchSurvey()
-    }
+    fetchSurvey()
   }, [surveyId])
 
   const handleTextChange = (questionId: string, value: string) => {
@@ -166,7 +182,7 @@ export default function SurveyResponse() {
 
       console.log("Submitting data:", formattedResponses) // Keep this debug log
 
-      const response = await fetch(`http://survey-pro-api.runasp.net/api/surveys/${surveyId}/respond`, {
+      const response = await fetch(`/api/surveys/${surveyId}/respond`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -175,9 +191,18 @@ export default function SurveyResponse() {
       })
 
       if (!response.ok) {
-        const errorText = await response.text()
-        console.error("API response:", errorText)
-        throw new Error(`API error: ${response.status} - ${errorText}`)
+        const contentType = response.headers.get("content-type")
+        let errorMessage = `API error: ${response.status}`
+
+        if (contentType && contentType.includes("application/json")) {
+          const errorData = await response.json()
+          errorMessage = errorData.message || errorMessage
+        } else {
+          const errorText = await response.text()
+          console.error("API response:", errorText)
+        }
+
+        throw new Error(errorMessage)
       }
 
       setSuccess(true)
@@ -186,7 +211,7 @@ export default function SurveyResponse() {
       }, 3000)
     } catch (err) {
       console.error("Error submitting survey responses:", err)
-      setSubmitError("Failed to submit your responses. Please try again.")
+      setSubmitError(`Failed to submit your responses: ${err instanceof Error ? err.message : "Please try again."}`)
     } finally {
       setSubmitting(false)
     }
@@ -351,9 +376,20 @@ export default function SurveyResponse() {
         <div className="text-center">
           <div className="bg-red-100 text-red-700 p-4 rounded-lg inline-block">
             <p>{error}</p>
-            <button onClick={() => window.location.reload()} className="mt-2 text-indigo-600 hover:underline">
-              Try again
-            </button>
+            <div className="mt-4 flex justify-center gap-4">
+              <button
+                onClick={() => window.location.reload()}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+              >
+                Try again
+              </button>
+              <button
+                onClick={() => navigate("/surveys")}
+                className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+              >
+                Back to surveys
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -373,7 +409,21 @@ export default function SurveyResponse() {
   }
 
   if (!survey) {
-    return null
+    return (
+      <div className="max-w-3xl mx-auto px-4 py-12">
+        <div className="text-center">
+          <div className="bg-yellow-100 text-yellow-700 p-4 rounded-lg inline-block">
+            <p>No survey data available. The survey may have been deleted or is no longer active.</p>
+            <button
+              onClick={() => navigate("/surveys")}
+              className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+            >
+              Back to surveys
+            </button>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -418,7 +468,7 @@ export default function SurveyResponse() {
         <div className="flex justify-between mt-8">
           <button
             type="button"
-            onClick={() => navigate(-1)}
+            onClick={() => navigate("/surveys")}
             className="px-6 py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
           >
             Cancel

@@ -17,6 +17,7 @@ interface Survey {
   createdBy: string
   updatedAt?: string
   questions: Question[]
+  numberOfResponses?: number
 }
 
 interface Question {
@@ -173,9 +174,7 @@ const SurveyList = () => {
     tags: generateTags(survey),
     questions: survey.questions || [],
     duration: `${Math.max(2, Math.ceil(survey.questions?.length || 0 / 2))} mins`,
-    participants: Math.floor(Math.random() * 300) + 50, // Random number for demo
-    rating: (4 + Math.random()).toFixed(1), // Random rating between 4.0-5.0
-    featured: Math.random() > 0.7, // 30% chance of being featured
+    participants: survey.numberOfResponses || 0, // Use the actual number of responses
   }))
 
   const filteredSurveys = processedSurveys.filter((survey) => {
@@ -306,11 +305,7 @@ const SurveyList = () => {
                         </div>
                         <div className="flex items-center">
                           <Users className="h-4 w-4 mr-1" />
-                          <span>{survey.participants} participants</span>
-                        </div>
-                        <div className="flex items-center">
-                          <Star className="h-4 w-4 mr-1 text-yellow-400" />
-                          <span>{survey.rating} rating</span>
+                          <span>{survey.participants} responses</span>
                         </div>
                       </div>
                     </div>
