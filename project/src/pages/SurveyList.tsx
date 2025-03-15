@@ -86,8 +86,7 @@ const SurveyList = () => {
     const fetchSurveys = async () => {
       try {
         setLoading(true)
-        const response = await fetch("http://survey-pro-api.runasp.net/api/surveys")
-
+        const response = await fetch("/api/surveys")
         if (!response.ok) {
           throw new Error(`API error: ${response.status}`)
         }
