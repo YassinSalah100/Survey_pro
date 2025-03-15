@@ -10,13 +10,4 @@ export default defineConfig({
   build: {
     outDir: 'dist',
   },
-  server: {
-    proxy: {
-      '/api': {
-        target: 'http://survey-pro-api.runasp.net', // 
-        changeOrigin: true,
-        secure: false, //
-      }
-    }
-  }
 });
