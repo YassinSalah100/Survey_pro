@@ -4,6 +4,7 @@ import type React from "react"
 import { useState } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 import { LogIn, AlertCircle, CheckCircle2, LineChart } from "lucide-react"
+import { useAuth } from "../context/AuthContext"
 
 const Login = () => {
   const [email, setEmail] = useState("")
@@ -12,6 +13,7 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
+  const { login } = useAuth()
 
   const from = location.state?.from?.pathname || "/surveys"
   const API_URL = "/api"
@@ -41,17 +43,13 @@ const Login = () => {
 
       const data = await response.json()
 
-      // Store the authentication data in localStorage
-      localStorage.setItem("auth_token", data.token)
-      localStorage.setItem(
-        "user",
-        JSON.stringify({
-          id: data.id,
-          username: data.username,
-          email: data.email,
-          roles: data.roles,
-        }),
-      )
+      // Use the auth context to login
+      login(data.token, {
+        id: data.id,
+        username: data.username,
+        email: data.email,
+        roles: data.roles,
+      })
 
       navigate(from, { replace: true })
     } catch (err) {

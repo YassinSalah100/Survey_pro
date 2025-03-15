@@ -1,5 +1,7 @@
 "use client"
 
+import type React from "react"
+
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { ClipboardList, Search, Clock, Users, Star, TrendingUp, ChevronRight } from "lucide-react"
@@ -82,11 +84,43 @@ const SurveyList = () => {
   const [error, setError] = useState<string | null>(null)
   const navigate = useNavigate()
 
+  const [isAdmin, setIsAdmin] = useState(false)
+
+  useEffect(() => {
+    // Check if user is admin
+    try {
+      const userStr = localStorage.getItem("user")
+      console.log("User from localStorage:", userStr)
+
+      if (!userStr) {
+        console.log("No user found in localStorage")
+        setIsAdmin(false)
+        return
+      }
+
+      const user = JSON.parse(userStr)
+      console.log("Parsed user:", user)
+      console.log("User roles:", user.roles)
+
+      // Check for admin role with case insensitivity
+      const isUserAdmin =
+        Array.isArray(user.roles) &&
+        user.roles.some((role) => typeof role === "string" && role.toLowerCase() === "admin")
+
+      console.log("Is user admin:", isUserAdmin)
+      setIsAdmin(isUserAdmin)
+    } catch (err) {
+      console.error("Error checking admin status:", err)
+      setIsAdmin(false)
+    }
+  }, [])
+
   useEffect(() => {
     const fetchSurveys = async () => {
       try {
         setLoading(true)
         const response = await fetch("/api/surveys")
+
         if (!response.ok) {
           throw new Error(`API error: ${response.status}`)
         }
@@ -103,6 +137,34 @@ const SurveyList = () => {
 
     fetchSurveys()
   }, [])
+
+  const handleDeleteSurvey = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+
+    if (!confirm("Are you sure you want to delete this survey?")) {
+      return
+    }
+
+    try {
+      const token = localStorage.getItem("auth_token")
+      const response = await fetch(`/api/surveys/${id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
+      if (!response.ok) {
+        throw new Error(`Failed to delete survey: ${response.status}`)
+      }
+
+      // Remove the deleted survey from the state
+      setSurveys(surveys.filter((survey) => survey.id !== id))
+    } catch (err) {
+      console.error("Error deleting survey:", err)
+      setError("Failed to delete survey. Please try again.")
+    }
+  }
 
   // Process surveys to add category and tags
   const processedSurveys = surveys.map((survey) => ({
@@ -253,13 +315,40 @@ const SurveyList = () => {
                       </div>
                     </div>
 
-                    <button
-  onClick={() => navigate(`/surveys/${survey.id}`)}
-  className="w-full sm:w-auto mt-4 sm:mt-0 group px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center justify-center space-x-2"
->
-  <span>Take Survey</span>
-  <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-</button>
+                    <div className="flex flex-col sm:flex-row gap-2 mt-4 sm:mt-0">
+                      {isAdmin && (
+                        <button
+                          onClick={(e) => handleDeleteSurvey(survey.id, e)}
+                          className="w-full sm:w-auto group px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center space-x-2"
+                          aria-label="Delete survey"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-5 w-5 mr-1"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M3 6h18"></path>
+                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                            <line x1="10" y1="11" x2="10" y2="17"></line>
+                            <line x1="14" y1="11" x2="14" y2="17"></line>
+                          </svg>
+                          <span>Delete</span>
+                        </button>
+                      )}
+                      <button
+                        onClick={() => navigate(`/surveys/${survey.id}`)}
+                        className="w-full sm:w-auto group px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center justify-center space-x-2"
+                      >
+                        <span>Take Survey</span>
+                        <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
