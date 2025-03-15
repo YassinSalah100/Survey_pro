@@ -18,6 +18,7 @@ interface Survey {
   updatedAt?: string
   questions: Question[]
   numberOfResponses?: number
+  category?: string
 }
 
 interface Question {
@@ -31,29 +32,25 @@ interface Question {
 }
 
 const categories = [
-  { id: 1, name: "Customer Feedback", color: "bg-blue-100", icon: Users },
-  { id: 2, name: "Employee Satisfaction", color: "bg-green-100", icon: Star },
-  { id: 3, name: "Market Research", color: "bg-purple-100", icon: TrendingUp },
-  { id: 4, name: "Product Development", color: "bg-yellow-100", icon: ClipboardList },
+  { id: 1, name: "Customer Feedback", value: "customer_feedback", color: "bg-blue-100", icon: Users },
+  { id: 2, name: "Employee Satisfaction", value: "employee_satisfaction", color: "bg-green-100", icon: Star },
+  { id: 3, name: "Market Research", value: "market_research", color: "bg-purple-100", icon: TrendingUp },
+  { id: 4, name: "Product Development", value: "product_development", color: "bg-yellow-100", icon: ClipboardList },
+  { id: 5, name: "Education", value: "education", color: "bg-pink-100", icon: ClipboardList },
+  { id: 6, name: "Event Feedback", value: "event_feedback", color: "bg-orange-100", icon: ClipboardList },
+  { id: 7, name: "Research", value: "research", color: "bg-indigo-100", icon: ClipboardList },
 ]
 
-// Helper function to categorize surveys
-const categorizeSurvey = (survey: Survey) => {
-  // Simple categorization logic based on title or description
-  const text = (survey.title + " " + survey.description).toLowerCase()
+// Helper function to get category display name from value
+const getCategoryDisplayName = (categoryValue: string): string => {
+  const category = categories.find((c) => c.value === categoryValue)
+  return category ? category.name : "Customer Feedback"
+}
 
-  if (text.includes("customer") || text.includes("service") || text.includes("feedback")) {
-    return "Customer Feedback"
-  } else if (text.includes("employee") || text.includes("work") || text.includes("satisfaction")) {
-    return "Employee Satisfaction"
-  } else if (text.includes("market") || text.includes("research") || text.includes("trend")) {
-    return "Market Research"
-  } else if (text.includes("product") || text.includes("development") || text.includes("feature")) {
-    return "Product Development"
-  }
-
-  // Default category
-  return "Customer Feedback"
+// Helper function to get category color from value
+const getCategoryColor = (categoryValue: string): string => {
+  const category = categories.find((c) => c.value === categoryValue)
+  return category ? category.color : "bg-blue-100"
 }
 
 // Helper function to generate tags from survey content
@@ -170,7 +167,8 @@ const SurveyList = () => {
   // Process surveys to add category and tags
   const processedSurveys = surveys.map((survey) => ({
     ...survey,
-    category: categorizeSurvey(survey),
+    displayCategory: getCategoryDisplayName(survey.category || "customer_feedback"),
+    categoryColor: getCategoryColor(survey.category || "customer_feedback"),
     tags: generateTags(survey),
     questions: survey.questions || [],
     duration: `${Math.max(2, Math.ceil(survey.questions?.length || 0 / 2))} mins`,
@@ -178,7 +176,8 @@ const SurveyList = () => {
   }))
 
   const filteredSurveys = processedSurveys.filter((survey) => {
-    const matchesCategory = selectedCategory === "all" || survey.category === selectedCategory
+    const matchesCategory =
+      selectedCategory === "all" || categories.find((c) => c.name === selectedCategory)?.value === survey.category
     const matchesSearch =
       survey.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       survey.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -274,13 +273,10 @@ const SurveyList = () => {
                   <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between">
                     <div className="flex-1">
                       <div className="flex flex-wrap gap-2 mb-2">
-                        {survey.featured && (
-                          <span className="px-2.5 py-0.5 bg-indigo-100 text-indigo-800 text-xs font-medium rounded-full">
-                            Featured
-                          </span>
-                        )}
-                        <span className="px-2.5 py-0.5 bg-gray-100 text-gray-800 text-xs font-medium rounded-full">
-                          {survey.category}
+                        <span
+                          className={`px-2.5 py-0.5 ${survey.categoryColor} text-gray-800 text-xs font-medium rounded-full`}
+                        >
+                          {survey.displayCategory}
                         </span>
                       </div>
                       <h3 className="text-xl font-semibold text-gray-900 mb-2">{survey.title}</h3>

@@ -288,23 +288,27 @@ export default function SurveyResponse() {
           </div>
         )
 
-      case QuestionType.Rating:
-        return (
-          <div className="flex flex-wrap gap-2">
-            {question.options?.map((option, optionIndex) => (
-              <button
-                type="button"
-                key={optionIndex}
-                className={`w-12 h-12 flex items-center justify-center rounded-full text-lg font-medium transition-colors ${
-                  answer?.value === option ? "bg-indigo-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                }`}
-                onClick={() => handleMultipleChoiceChange(question.id, option)}
-              >
-                {option}
-              </button>
-            ))}
-          </div>
-        )
+        case QuestionType.Rating:
+          return (
+            <div className="w-full">
+              <div className="flex justify-between">
+                {question.options?.map((option, optionIndex) => (
+                  <div key={optionIndex} className="flex flex-col items-center gap-2 w-20">
+                    <button
+                      type="button"
+                      className={`w-12 h-12 flex items-center justify-center rounded-full text-lg font-medium transition-colors ${
+                        answer?.value === option ? "bg-indigo-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      }`}
+                      onClick={() => handleMultipleChoiceChange(question.id, option)}
+                    >
+                      {optionIndex + 1}
+                    </button>
+                    <span className="text-center text-xs text-gray-500">{option}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )
 
       case QuestionType.NPS:
         return (
