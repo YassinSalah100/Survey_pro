@@ -59,7 +59,7 @@ export default function SurveyResponse() {
     const fetchSurvey = async () => {
       try {
         setLoading(true)
-        const response = await fetch(`http://survey-pro-api.runasp.net/api/surveys/${surveyId}`)
+        const response = await fetch(`/api/surveys/${surveyId}`)
 
         if (!response.ok) {
           throw new Error(`API error: ${response.status}`)

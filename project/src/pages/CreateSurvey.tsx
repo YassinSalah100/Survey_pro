@@ -57,7 +57,7 @@ interface ApiQuestion {
   imageUrl?: string | null
 }
 
-const API_BASE_URL = "http://survey-pro-api.runasp.net/api"
+const API_BASE_URL = "/api"
 
 // Map our question types to the API's numeric types
 const questionTypeToApiType = (type: QuestionType): number => {
