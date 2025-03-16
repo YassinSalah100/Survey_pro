@@ -167,12 +167,12 @@ const SurveyList = () => {
   // Process surveys to add category and tags
   const processedSurveys = surveys.map((survey) => ({
     ...survey,
-    displayCategory: getCategoryDisplayName(survey.category || "customer_feedback"),
-    categoryColor: getCategoryColor(survey.category || "customer_feedback"),
+    displayCategory: "Research", // Fixed to "Research" 
+    categoryColor: getCategoryColor("research"), // Use the "research" color
     tags: generateTags(survey),
     questions: survey.questions || [],
-    duration: `${Math.max(2, Math.ceil(survey.questions?.length || 0 / 2))} mins`,
-    participants: survey.numberOfResponses || 0, // Use the actual number of responses
+    duration: "10 mins", // Fixed at 10 mins
+    participants: survey.numberOfResponses || 0,
   }))
 
   const filteredSurveys = processedSurveys.filter((survey) => {
