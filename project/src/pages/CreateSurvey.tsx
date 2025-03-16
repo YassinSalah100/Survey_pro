@@ -213,39 +213,37 @@ const CreateSurvey = () => {
   }
 
   // Convert our survey format to the API format
-  const convertToApiFormat = () => {
-    // Convert questions to API format
-    const apiQuestions: ApiQuestion[] = survey.questions.map((q) => {
-      let options: string[] = []
+// Convert our survey format to the API format
+const convertToApiFormat = () => {
+  // Convert questions to API format
+  const apiQuestions: ApiQuestion[] = survey.questions.map((q) => {
+    let options: string[] = []
 
-      // Handle different question types
-      if (q.type === "multiple_choice" || q.type === "checkbox") {
-        options = q.options || []
-      } else if (q.type === "likert_scale" && q.likertScale) {
-        // For likert scale, create options from min to max
-        options = []
-        for (let i = q.likertScale.min; i <= q.likertScale.max; i++) {
-          options.push(i.toString())
-        }
-      } else if (q.type === "linear_scale" && q.linearScale) {
-        // For linear scale, create options from min to max
-        options = []
-        for (let i = q.linearScale.min; i <= q.linearScale.max; i++) {
-          options.push(i.toString())
-        }
+    // Handle different question types
+    if (q.type === "multiple_choice" || q.type === "checkbox") {
+      options = q.options || []
+    } else if (q.type === "likert_scale" && q.likertScale) {
+      // For likert scale, use the labels instead of numeric values
+      options = q.likertScale.labels
+    } else if (q.type === "linear_scale" && q.linearScale) {
+      // For linear scale, create options from min to max
+      options = []
+      for (let i = q.linearScale.min; i <= q.linearScale.max; i++) {
+        options.push(i.toString())
       }
+    }
 
-      return {
-        title: q.question,
-        description: q.description || "",
-        type: questionTypeToApiType(q.type),
-        options: options,
-        isRequired: q.required,
-      }
-    })
+    return {
+      title: q.question,
+      description: q.description || "",
+      type: questionTypeToApiType(q.type),
+      options: options,
+      isRequired: q.required,
+    }
+  })
 
-    return apiQuestions
-  }
+  return apiQuestions
+}
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
