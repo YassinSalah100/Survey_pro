@@ -9,6 +9,12 @@
   to = "http://survey-pro-api.runasp.net/api/:splat"
   status = 200
   force = true
+  
+[[redirects]]
+  from = "/api/files/*"
+  to = "http://survey-pro-api.runasp.net/api/files/:splat"
+  status = 200
+  force = true
 
 [[redirects]]
   from = "/*"

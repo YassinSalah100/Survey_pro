@@ -87,6 +87,21 @@ export default function SurveyResponse() {
   // Refs for scroll handling
   const questionRefs = useRef<(HTMLDivElement | null)[]>([])
 
+  // Helper function to ensure image URLs use the proxy
+  const getProxiedImageUrl = (url: string | undefined) => {
+    if (!url) return "/placeholder.svg"
+
+    // If it's already a relative URL, return as is
+    if (url.startsWith("/")) return url
+
+    // If it's an API file URL, convert to use our proxy
+    if (url.includes("survey-pro-api.runasp.net/api/files")) {
+      return url.replace("http://survey-pro-api.runasp.net/api/files", "/api/files")
+    }
+
+    return url
+  }
+
   useEffect(() => {
     const fetchSurvey = async () => {
       if (!surveyId) {
@@ -846,7 +861,7 @@ export default function SurveyResponse() {
           {survey.coverImageUrl && (
             <div className="mt-4 mb-6">
               <img
-                src={survey.coverImageUrl || "/placeholder.svg"}
+                src={getProxiedImageUrl(survey.coverImageUrl) || "/placeholder.svg"}
                 alt="Survey cover"
                 className="rounded-lg w-full max-h-64 object-cover shadow-md"
               />
@@ -973,7 +988,7 @@ export default function SurveyResponse() {
                   {survey.questions[currentQuestionIndex].imageUrl && (
                     <div className="mb-6">
                       <img
-                        src={survey.questions[currentQuestionIndex].imageUrl || "/placeholder.svg"}
+                        src={getProxiedImageUrl(survey.questions[currentQuestionIndex].imageUrl) || "/placeholder.svg"}
                         alt={`Image for ${survey.questions[currentQuestionIndex].title}`}
                         className="rounded-lg max-h-64 object-contain mx-auto"
                       />
@@ -1050,7 +1065,7 @@ export default function SurveyResponse() {
                 {question.imageUrl && (
                   <div className="mb-4">
                     <img
-                      src={question.imageUrl || "/placeholder.svg"}
+                      src={getProxiedImageUrl(question.imageUrl) || "/placeholder.svg"}
                       alt={`Image for ${question.title}`}
                       className="rounded-lg max-h-64 object-contain"
                     />
