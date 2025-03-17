@@ -17,6 +17,7 @@ import {
   Loader2,
   Calendar,
   Clock3,
+  PartyPopper,
 } from "lucide-react"
 
 // Define types based on the API
@@ -79,6 +80,9 @@ export default function SurveyResponse() {
   const [tooltipMessage, setTooltipMessage] = useState("")
   const [tooltipType, setTooltipType] = useState<"success" | "error" | "info">("info")
   const [remainingRequired, setRemainingRequired] = useState<number>(0)
+  const [showCompletionMessage, setShowCompletionMessage] = useState(false)
+  // Add a flag to track if the user has explicitly clicked the Next button on the last question
+  const [userCompletedLastQuestion, setUserCompletedLastQuestion] = useState(false)
 
   // Refs for scroll handling
   const questionRefs = useRef<(HTMLDivElement | null)[]>([])
@@ -163,7 +167,20 @@ export default function SurveyResponse() {
     }).length
 
     setRemainingRequired(unansweredRequired)
-  }, [answers, survey])
+
+    // IMPORTANT: We're removing the automatic completion message logic
+    // The completion message will now ONLY be shown when the user explicitly clicks "Next" on the last question
+  }, [answers, survey, currentQuestionIndex, viewMode])
+
+  // This effect controls the completion message visibility
+  useEffect(() => {
+    // Only show completion message if the user has explicitly completed the last question
+    if (userCompletedLastQuestion && survey && currentQuestionIndex === survey.questions.length - 1) {
+      setShowCompletionMessage(true)
+    } else {
+      setShowCompletionMessage(false)
+    }
+  }, [userCompletedLastQuestion, currentQuestionIndex, survey])
 
   const handleTextChange = (questionId: string, value: string) => {
     // Clear any existing submit error when user types an answer
@@ -172,28 +189,18 @@ export default function SurveyResponse() {
     }
 
     setAnswers((prev) => prev.map((answer) => (answer.questionId === questionId ? { ...answer, value } : answer)))
+
+    // IMPORTANT: No auto-advancement logic here
+    // No matter what the user types, we don't change the current question or show completion message
   }
 
-  // Fix the auto-advance issue when changing answers
-  // Modify the handleMultipleChoiceChange function to only auto-advance on first selection
   const handleMultipleChoiceChange = (questionId: string, value: string) => {
-    // Find the current answer to check if this is a first selection or a change
-    const currentAnswer = answers.find((a) => a.questionId === questionId)
-    const isFirstSelection = !currentAnswer?.value
-
     // Clear any existing submit error when user selects an answer
     if (submitError) {
       setSubmitError(null)
     }
 
     setAnswers((prev) => prev.map((answer) => (answer.questionId === questionId ? { ...answer, value } : answer)))
-
-    // Only auto-advance if this is the first selection (not when changing answers)
-    if (viewMode === "single" && currentQuestionIndex < (survey?.questions.length || 0) - 1 && isFirstSelection) {
-      setTimeout(() => {
-        handleNextQuestion()
-      }, 500)
-    }
   }
 
   const handleCheckboxChange = (questionId: string, value: string, checked: boolean) => {
@@ -221,7 +228,6 @@ export default function SurveyResponse() {
     )
   }
 
-  // Improve the validateAnswers function to be more strict
   const validateAnswers = (showErrors = false) => {
     if (!survey) return false
 
@@ -309,7 +315,6 @@ export default function SurveyResponse() {
     e.preventDefault()
     setSubmitError(null)
 
-    // Only validate and show errors on submission
     if (!validateAnswers(true)) return
 
     try {
@@ -356,7 +361,6 @@ export default function SurveyResponse() {
       }
 
       setSuccess(true)
-      showTooltipMessage("Survey submitted successfully!", "success")
       triggerConfetti()
 
       setTimeout(() => {
@@ -370,39 +374,50 @@ export default function SurveyResponse() {
     }
   }
 
-  // Strengthen the validation in handleNextQuestion to ensure required questions are answered
   const handleNextQuestion = () => {
     if (!survey) return
 
     // Check if current question is required but not answered
     const currentQuestion = survey.questions[currentQuestionIndex]
-    // Find the answer by questionId
     const currentAnswer = answers.find((a) => a.questionId === currentQuestion.id)
 
+    // For required questions, check if they have been answered
     if (currentQuestion.isRequired) {
       const isAnswered = Array.isArray(currentAnswer?.value)
         ? currentAnswer.value.length > 0
         : Boolean(currentAnswer?.value)
 
       if (!isAnswered) {
-        // Just don't proceed to next question, but don't show error message
+        // Show error message if required question is not answered
+        showTooltipMessage("Please answer this question before proceeding", "error")
         return
       }
     }
 
+    // Proceed to next question if validation passes
     if (currentQuestionIndex < survey.questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1)
+      setShowCompletionMessage(false) // Hide completion message when moving to next question
+      setUserCompletedLastQuestion(false) // Reset the flag when moving to a new question
+    } else {
+      // If we're on the last question and moving forward, mark as completed
+      // This is the ONLY place where we set userCompletedLastQuestion to true
+      setUserCompletedLastQuestion(true)
     }
   }
 
   const handlePrevQuestion = () => {
     if (currentQuestionIndex > 0) {
       setCurrentQuestionIndex(currentQuestionIndex - 1)
+      setShowCompletionMessage(false) // Hide completion message when moving to previous question
+      setUserCompletedLastQuestion(false) // Reset the flag when moving to a previous question
     }
   }
 
   const toggleViewMode = () => {
     setViewMode(viewMode === "single" ? "all" : "single")
+    setShowCompletionMessage(false) // Hide completion message when changing view mode
+    setUserCompletedLastQuestion(false) // Reset the flag when changing view mode
   }
 
   // Render different input types based on question type
@@ -828,6 +843,15 @@ export default function SurveyResponse() {
           </button>
           <h1 className="text-3xl font-bold text-gray-900 mb-4">{survey.title}</h1>
           <p className="text-gray-600">{survey.description}</p>
+          {survey.coverImageUrl && (
+            <div className="mt-4 mb-6">
+              <img
+                src={survey.coverImageUrl || "/placeholder.svg"}
+                alt="Survey cover"
+                className="rounded-lg w-full max-h-64 object-cover shadow-md"
+              />
+            </div>
+          )}
 
           {/* View mode toggle */}
           <div className="mt-6 flex items-center justify-between">
@@ -871,69 +895,45 @@ export default function SurveyResponse() {
               exit={{ opacity: 0, x: -50 }}
               className="p-8 bg-white rounded-xl shadow-sm"
             >
-              <div className="flex items-start mb-6">
-                <div className="flex flex-col items-center mr-4">
-                  <span className="flex items-center justify-center bg-indigo-600 text-white rounded-full w-10 h-10 mb-2">
-                    {currentQuestionIndex + 1}
-                  </span>
-                  <span className="text-xs text-gray-500">of {survey.questions.length}</span>
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-xl font-medium text-gray-900 mb-1">
-                    {survey.questions[currentQuestionIndex].title}
-                    {survey.questions[currentQuestionIndex].isRequired && <span className="text-red-500 ml-1">*</span>}
-                  </h3>
-                  {survey.questions[currentQuestionIndex].description && (
-                    <p className="text-gray-600 mb-4">{survey.questions[currentQuestionIndex].description}</p>
-                  )}
-                </div>
-              </div>
-
-              {survey.questions[currentQuestionIndex].imageUrl && (
-                <div className="mb-6">
-                  <img
-                    src={survey.questions[currentQuestionIndex].imageUrl || "/placeholder.svg"}
-                    alt={`Image for ${survey.questions[currentQuestionIndex].title}`}
-                    className="rounded-lg max-h-64 object-contain mx-auto"
-                  />
-                </div>
-              )}
-
-              <div className="mt-6">
-                {renderQuestionInput(survey.questions[currentQuestionIndex], currentQuestionIndex)}
-              </div>
-
-              <div className="flex justify-between mt-8">
-                <button
-                  type="button"
-                  onClick={handlePrevQuestion}
-                  disabled={currentQuestionIndex === 0}
-                  className={`px-4 py-2 flex items-center rounded-lg transition-colors ${
-                    currentQuestionIndex === 0
-                      ? "text-gray-400 cursor-not-allowed"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                  }`}
+              {showCompletionMessage && currentQuestionIndex === survey.questions.length - 1 ? (
+                <motion.div
+                  className="text-center py-8"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.5 }}
                 >
-                  <ChevronLeft className="h-5 w-5 mr-1" />
-                  Previous
-                </button>
-
-                {currentQuestionIndex < survey.questions.length - 1 ? (
-                  <button
-                    type="button"
-                    onClick={handleNextQuestion}
-                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center"
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
                   >
-                    Next
-                    <ChevronRight className="h-5 w-5 ml-1" />
-                  </button>
-                ) : (
-                  <button
+                    <PartyPopper className="h-16 w-16 text-indigo-500 mx-auto mb-4" />
+                  </motion.div>
+                  <motion.h3
+                    className="text-2xl font-bold text-indigo-800 mb-4"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                  >
+                    Thank You for Completing the Survey!
+                  </motion.h3>
+                  <motion.p
+                    className="text-gray-600 mb-6"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4 }}
+                  >
+                    You've answered all the questions. Please click the submit button below to send your responses.
+                  </motion.p>
+                  <motion.button
                     type="submit"
                     disabled={submitting}
-                    className={`px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center ${
+                    className={`px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center mx-auto ${
                       submitting ? "opacity-70 cursor-not-allowed" : ""
                     }`}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5 }}
                   >
                     {submitting ? (
                       <>
@@ -942,13 +942,85 @@ export default function SurveyResponse() {
                       </>
                     ) : (
                       <>
-                        Submit
+                        Submit Responses
                         <Send className="h-4 w-4 ml-2" />
                       </>
                     )}
-                  </button>
-                )}
-              </div>
+                  </motion.button>
+                </motion.div>
+              ) : (
+                <>
+                  <div className="flex items-start mb-6">
+                    <div className="flex flex-col items-center mr-4">
+                      <span className="flex items-center justify-center bg-indigo-600 text-white rounded-full w-10 h-10 mb-2">
+                        {currentQuestionIndex + 1}
+                      </span>
+                      <span className="text-xs text-gray-500">of {survey.questions.length}</span>
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-xl font-medium text-gray-900 mb-1">
+                        {survey.questions[currentQuestionIndex].title}
+                        {survey.questions[currentQuestionIndex].isRequired && (
+                          <span className="text-red-500 ml-1">*</span>
+                        )}
+                      </h3>
+                      {survey.questions[currentQuestionIndex].description && (
+                        <p className="text-gray-600 mb-4">{survey.questions[currentQuestionIndex].description}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {survey.questions[currentQuestionIndex].imageUrl && (
+                    <div className="mb-6">
+                      <img
+                        src={survey.questions[currentQuestionIndex].imageUrl || "/placeholder.svg"}
+                        alt={`Image for ${survey.questions[currentQuestionIndex].title}`}
+                        className="rounded-lg max-h-64 object-contain mx-auto"
+                      />
+                    </div>
+                  )}
+
+                  <div className="mt-6">
+                    {renderQuestionInput(survey.questions[currentQuestionIndex], currentQuestionIndex)}
+                  </div>
+
+                  <div className="flex justify-between mt-8">
+                    <button
+                      type="button"
+                      onClick={handlePrevQuestion}
+                      disabled={currentQuestionIndex === 0}
+                      className={`px-4 py-2 flex items-center rounded-lg transition-colors ${
+                        currentQuestionIndex === 0
+                          ? "text-gray-400 cursor-not-allowed"
+                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      }`}
+                    >
+                      <ChevronLeft className="h-5 w-5 mr-1" />
+                      Previous
+                    </button>
+
+                    {currentQuestionIndex < survey.questions.length - 1 ? (
+                      <button
+                        type="button"
+                        onClick={handleNextQuestion}
+                        className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center"
+                      >
+                        Next
+                        <ChevronRight className="h-5 w-5 ml-1" />
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={handleNextQuestion}
+                        className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center"
+                      >
+                        Next
+                        <ChevronRight className="h-5 w-5 ml-1" />
+                      </button>
+                    )}
+                  </div>
+                </>
+              )}
             </motion.div>
           </div>
         ) : (
@@ -999,6 +1071,20 @@ export default function SurveyResponse() {
                   <AlertCircle className="h-5 w-5 mr-2" />
                   {submitError}
                 </div>
+              </motion.div>
+            )}
+
+            {progress === 100 && (
+              <motion.div
+                className="p-6 bg-indigo-50 rounded-lg text-center"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                <PartyPopper className="h-12 w-12 text-indigo-500 mx-auto mb-3" />
+                <h3 className="text-xl font-bold text-indigo-800 mb-2">All Done!</h3>
+                <p className="text-gray-600 mb-4">
+                  Thank you for completing all the questions. Please submit your responses below.
+                </p>
               </motion.div>
             )}
 
