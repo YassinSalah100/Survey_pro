@@ -82,8 +82,8 @@ export default function SurveyResponse() {
     if (url.startsWith("/")) return url
 
     // If it's an API file URL, convert to use our proxy
-    if (url.includes("survey-pro-api.runasp.net/api/files")) {
-      return url.replace("http://survey-pro-api.runasp.net/api/files", "/api/files")
+    if (url.includes("/api/files")) {
+      return url.replace("/api/files", "/api/files")
     }
 
     return url
@@ -166,7 +166,7 @@ export default function SurveyResponse() {
       }
 
       return !answer?.value
-    }).length
+    }).length 
 
     setRemainingRequired(unansweredRequired)
 

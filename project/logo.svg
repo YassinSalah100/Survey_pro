@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Main circle with gradient -->
+  <defs>
+    <linearGradient id="circleGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="1"/>
+      <stop offset="100%" stop-color="#f5f5f5" stop-opacity="0.9"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Circle with opening/gap at bottom right -->
+  <path d="M50,20 
+           A28,28 0 1,1 28,60 
+           L28,78" 
+        fill="none" 
+        stroke="url(#circleGradient)" 
+        stroke-width="6" 
+        stroke-linecap="round"
+        stroke-linejoin="round"/>
+  
+  <!-- Horizontal line extending from bottom -->
+  <path d="M28,78 L75,78" 
+        fill="none" 
+        stroke="#ffffff" 
+        stroke-width="6" 
+        stroke-linecap="round"
+        stroke-linejoin="round"/>
+  
+  <!-- Plant/growth symbol inside -->
+  <path d="M38,58 L50,38 L62,48" 
+        fill="none" 
+        stroke="#ffffff" 
+        stroke-width="5" 
+        stroke-linecap="round"
+        stroke-linejoin="round"/>
+  
+  <!-- Additional branch for plant -->
+  <path d="M50,38 L58,30" 
+        fill="none" 
+        stroke="#ffffff" 
+        stroke-width="5" 
+        stroke-linecap="round"
+        stroke-linejoin="round"/>
+</svg>

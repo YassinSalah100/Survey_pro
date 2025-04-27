@@ -117,7 +117,7 @@ const SurveyList = () => {
     const fetchSurveys = async () => {
       try {
         setLoading(true)
-        const response = await fetch("/api/surveys")
+        const response = await fetch("api/surveys")
 
         if (!response.ok) {
           throw new Error(`API error: ${response.status}`)
