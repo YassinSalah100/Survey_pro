@@ -89,21 +89,33 @@ export default function SurveyResponse() {
   // Refs for scroll handling
   const questionRefs = useRef<(HTMLDivElement | null)[]>([])
 
-  // Helper function to ensure image URLs use the proxy
+  // Helper function to ensure image URLs use the proxy and handle HTTPS issues
   const getProxiedImageUrl = (url: string | undefined) => {
     if (!url) return "/placeholder.svg"
 
     // If it's already a relative URL, return as is
     if (url.startsWith("/")) return url
 
-    // If it's an API file URL, make sure it's properly formatted
-    if (url.includes("/api/files")) {
-      // The URL is already in the correct format for the proxy
-      return url
-    }
+    try {
+      // Create a URL object to work with the URL parts
+      const urlObj = new URL(url)
 
-    // For external URLs, you might want to use a proxy or return as is
-    return url
+      // Check if we need to proxy the URL
+      if (url.includes("/api/files")) {
+        // For API file URLs, use a relative path to leverage Netlify redirects
+        // This avoids mixed content issues by using the same protocol as the site
+        const fileId = urlObj.pathname.split("/").pop()
+        if (fileId) {
+          return `/api/files/${fileId}`
+        }
+      }
+
+      // For other URLs, return as is
+      return url
+    } catch (e) {
+      console.error("Invalid URL:", url, e)
+      return "/placeholder.svg"
+    }
   }
 
   useEffect(() => {
