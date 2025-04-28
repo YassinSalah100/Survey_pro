@@ -5,7 +5,22 @@ import { useState, useEffect, useRef } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion"
 import confetti from "canvas-confetti"
-import { CheckCircle, Clock, AlertCircle, ChevronLeft, ChevronRight, Send, X, ArrowLeft, Loader2, Calendar, Clock3, PartyPopper, Star, ThumbsUp } from 'lucide-react'
+import {
+  CheckCircle,
+  Clock,
+  AlertCircle,
+  ChevronLeft,
+  ChevronRight,
+  Send,
+  X,
+  ArrowLeft,
+  Loader2,
+  Calendar,
+  Clock3,
+  PartyPopper,
+  Star,
+  ThumbsUp,
+} from "lucide-react"
 
 // Define types based on the API
 interface Survey {
@@ -81,11 +96,13 @@ export default function SurveyResponse() {
     // If it's already a relative URL, return as is
     if (url.startsWith("/")) return url
 
-    // If it's an API file URL, convert to use our proxy
+    // If it's an API file URL, make sure it's properly formatted
     if (url.includes("/api/files")) {
-      return url.replace("/api/files", "/api/files")
+      // The URL is already in the correct format for the proxy
+      return url
     }
 
+    // For external URLs, you might want to use a proxy or return as is
     return url
   }
 
@@ -119,6 +136,16 @@ export default function SurveyResponse() {
         const data = await response.json()
         console.log("Survey data:", data) // Debug log
         setSurvey(data)
+
+        // Add this inside the useEffect where you fetch the survey data, right after setting the survey data
+        console.log("Survey cover image URL:", data.coverImageUrl)
+        if (data.questions) {
+          data.questions.forEach((q: Question, i: number) => {
+            if (q.imageUrl) {
+              console.log(`Question ${i + 1} image URL:`, q.imageUrl)
+            }
+          })
+        }
 
         // Initialize answers array with empty values based on question type
         const initialAnswers = data.questions.map((question: Question) => ({
@@ -166,7 +193,7 @@ export default function SurveyResponse() {
       }
 
       return !answer?.value
-    }).length 
+    }).length
 
     setRemainingRequired(unansweredRequired)
 
@@ -957,6 +984,10 @@ export default function SurveyResponse() {
                     src={getProxiedImageUrl(survey.coverImageUrl) || "/placeholder.svg"}
                     alt="Survey cover"
                     className="w-full max-h-80 object-cover"
+                    onError={(e) => {
+                      console.error("Failed to load survey cover image:", survey.coverImageUrl)
+                      e.currentTarget.src = "/placeholder.svg"
+                    }}
                   />
                 </div>
               )}
@@ -1102,6 +1133,13 @@ export default function SurveyResponse() {
                           }
                           alt={`Image for ${survey.questions[currentQuestionIndex].title}`}
                           className="w-full max-h-80 object-contain"
+                          onError={(e) => {
+                            console.error(
+                              "Failed to load question image:",
+                              survey.questions[currentQuestionIndex].imageUrl,
+                            )
+                            e.currentTarget.src = "/placeholder.svg"
+                          }}
                         />
                       </div>
                     )}
@@ -1172,6 +1210,10 @@ export default function SurveyResponse() {
                         src={getProxiedImageUrl(question.imageUrl) || "/placeholder.svg"}
                         alt={`Image for ${question.title}`}
                         className="w-full max-h-80 object-contain"
+                        onError={(e) => {
+                          console.error("Failed to load question image:", question.imageUrl)
+                          e.currentTarget.src = "/placeholder.svg"
+                        }}
                       />
                     </div>
                   )}
@@ -1373,4 +1415,3 @@ function ArrowLeftRight(props: React.SVGProps<SVGSVGElement>) {
     </svg>
   )
 }
-
